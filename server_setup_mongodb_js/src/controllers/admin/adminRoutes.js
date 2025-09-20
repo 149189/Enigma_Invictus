@@ -1,34 +1,23 @@
 import express from "express";
 import {
-  getProjects,
-  validateProject,
-  getDonations,
-  getDonationStats,
-  getProjectStats,
   registerAdmin,
   loginAdmin,
-  getAdminProfile
+  getAdminProfile,
+  logoutAdmin
 } from "./adminController.js";
-import { adminProtect } from "../../middlewares/auth.middleware.js"; // Admin authentication middleware
+import { adminProtect } from "../middlewares/auth.middleware.js";
 
 const router = express.Router();
 
-// router.post("/register", registerAdmin);
+// Public routes
+router.post("/register", registerAdmin);
 router.post("/login", loginAdmin);
 
+// Protect all routes after this middleware
 router.use(adminProtect);
 
-
-// Protected route
+// Protected routes
 router.get("/profile", getAdminProfile);
-
-// Project management routes
-router.get("/projects", getProjects);
-router.patch("/projects/:id/validate", validateProject);
-
-// Donation management routes
-router.get("/donations", getDonations);
-router.get("/stats/donations", getDonationStats);
-router.get("/stats/projects", getProjectStats);
+router.get("/logout", logoutAdmin);
 
 export default router;

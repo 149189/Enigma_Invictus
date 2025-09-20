@@ -7,7 +7,7 @@ const projectSchema = new mongoose.Schema({
   category: { type: String, enum: ["Education", "Health", "Environment", "Community", "Other"], required: true },
   goalAmount: { type: Number, required: true },
   raisedAmount: { type: Number, default: 0 },
-
+  
   // Admin validation
   status: { type: String, enum: ["pending", "approved", "rejected"], default: "pending" },
   validatedBy: { type: mongoose.Schema.Types.ObjectId, ref: "Admin" },
