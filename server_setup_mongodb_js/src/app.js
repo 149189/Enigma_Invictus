@@ -2,6 +2,8 @@ import express from "express";
 import cors from "cors";
 import cookieParser from "cookie-parser";
 import { userRoute } from "./controllers/user/userRoute.js";
+// import { creatorRoute } from "./controllers/creator/creatorRoute.js";
+// import { adminRoute } from "./controllers/admin/adminRoute.js";
 
 const app = express();
 
@@ -20,8 +22,8 @@ app.use(express.static("public"));
 app.use(cookieParser());
 
 app.use("/api/users", userRoute);
-app.use("/api/creators", creatorRoute);
-app.use("/api/admins", adminRoute);
+// app.use("/api/creators", creatorRoute);
+// app.use("/api/admins", adminRoute);
 
 
 

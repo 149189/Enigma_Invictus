@@ -70,7 +70,7 @@ const donorSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-userSchema.index({ email: 1, provider: 1 }, { unique: true });
+donorSchema.index({ email: 1, provider: 1 }, { unique: true });
 
 const Donor =  mongoose.model("Donor", donorSchema);
 export default Donor;
