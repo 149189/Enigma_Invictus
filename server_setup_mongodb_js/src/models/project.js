@@ -14,6 +14,12 @@ const projectSchema = new mongoose.Schema({
 
   // Optional cover image
   images: [{ type: String }],
+
+  // AI verification metadata
+  verificationConfidence: { type: Number, default: null },
+  verificationNotes: { type: String, default: "" },
+  autoVerified: { type: Boolean, default: false },
+  verifiedAt: { type: Date, default: null },
 }, { timestamps: true });
 
 const Project = mongoose.model("Project", projectSchema);
