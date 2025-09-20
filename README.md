@@ -72,3 +72,7 @@ python manage.py runserver 8001
 
 Enigma\_Invictus — Kaustubh, Tanmay, Medhansh, Yash
 
+```
+AI Generated code has been used for this project.
+```
+
