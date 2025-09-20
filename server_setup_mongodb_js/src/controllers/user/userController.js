@@ -204,9 +204,9 @@ const loginUser = asyncHandler(async (req, res) => {
   }
 
   // Check if email is verified
-  if (!user.isVerified) {
-    return sendResponse(res, false, null, "Please verify your email first", statusType.UNAUTHORIZED);
-  }
+  // if (!user.isVerified) {
+  //   return sendResponse(res, false, null, "Please verify your email first", statusType.UNAUTHORIZED);
+  // }
 
   const isMatch = await bcrypt.compare(password, user.password);
   if (!isMatch) {
