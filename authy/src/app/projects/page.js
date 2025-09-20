@@ -35,12 +35,11 @@ const ProjectsPage = () => {
       try {
         setLoading(true);
         const response = await axios.get('http://localhost:8000/api/projects/get_all');
-        
+        console.log("response:",response);
+
         if (response.data.success) {
           // Only show approved projects to users
-          const approvedProjects = response.data.projects.filter(
-            project => project.status === 'approved'
-          );
+          const approvedProjects = response.data.projects;
           setProjects(approvedProjects);
         } else {
           setError('Failed to fetch projects');
@@ -55,15 +54,15 @@ const ProjectsPage = () => {
 
     fetchProjects();
   }, []);
-
+  console.log("response:",projects[0]);
   const filteredProjects = projects
-    .filter(project => {
-      const matchesSearch =
-        project.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        project.description.toLowerCase().includes(searchTerm.toLowerCase());
-      const matchesCategory = selectedCategory === 'all' || project.category === selectedCategory;
-      return matchesSearch && matchesCategory;
-    })
+  .filter(project => {
+    const matchesSearch =
+      project.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      project.description.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesCategory = selectedCategory === 'all' || project.category === selectedCategory;
+    return matchesSearch && matchesCategory;
+  })
     .sort((a, b) => {
       switch (sortBy) {
         case 'popular':
@@ -186,7 +185,7 @@ const ProjectsPage = () => {
         </div>
 
         {/* Projects Grid */}
-        {filteredProjects.length > 0 ? (
+        {projects.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {filteredProjects.map((project, index) => (
               <div
@@ -206,7 +205,7 @@ const ProjectsPage = () => {
                     donorCount: 0, // You might want to add this field to your API
                     daysLeft: 30, // You might want to add an end date to your project schema
                     createdAt: project.createdAt,
-                    image: project.images && project.images.length > 0 
+                    image: project.images[0] && project.images.length > 0 
                       ? project.images[0] 
                       : 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=600',
                     creator: project.creator

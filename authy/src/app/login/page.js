@@ -29,8 +29,8 @@ export default function Home() {
         router.push("/welcome");
       }
     };
-  
-  } );
+   
+  }, );
 
   const handleChange = (e) => {
     setFormData((prev) => ({ ...prev, [e.target.name]: e.target.value }));

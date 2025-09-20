@@ -27,11 +27,12 @@ export default function ProfilePage() {
   useEffect(() => {
     const checkAuth = async () => {
       const response = await getCurrentUser(router);
+      console.log(response);
       if (response?.data) {
         const currentUser = {
           name: response.data.data.name,
           avatar: response.data.data.avatar,
-          token: response.data.accessToken
+          token: response.data.data.token
         };
         setUser(currentUser);
         localStorage.setItem("user", JSON.stringify(currentUser));

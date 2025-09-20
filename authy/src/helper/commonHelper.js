@@ -32,7 +32,7 @@ const handleRequest = async (axiosCall) => {
 // Use NEXT_PUBLIC_API_URL (as exposed in next.config.mjs) with a local default
 const base_url =
   process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, "") ||
-  "http://localhost:8001/api";
+  "http://localhost:8000/api";
 
 // 🔑 Function to get access token from localStorage
 const getAccessToken = () => {

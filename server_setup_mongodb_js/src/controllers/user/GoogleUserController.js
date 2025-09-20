@@ -76,19 +76,31 @@ const googleAuth = asyncHandler(async (req, res) => {
 });
 const getCurrentUser = asyncHandler(async (req, res) => {
   const authHeader = req.headers.authorization;
-  if (!authHeader) return sendResponse(res, false, null, "No token", statusType.UNAUTHORIZED);
+  if (!authHeader) {
+    return sendResponse(res, false, null, "No token", statusType.UNAUTHORIZED);
+  }
 
   const token = req.cookies.accessToken; // read httpOnly cookie
   console.log("token is :-", token);
+
   try {
-    
     const decoded = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
     const user = await User.findById(decoded.user_id).select("-password -refreshToken");
-    return sendResponse(res, true, user, "User fetched", statusType.SUCCESS);
+
+    if (!user) {
+      return sendResponse(res, false, null, "User not found", statusType.NOT_FOUND);
+    }
+
+    // Convert to plain object so we can safely add new fields
+    const userData = user.toObject();
+    userData.token = token;
+
+    return sendResponse(res, true, userData, "User fetched", statusType.SUCCESS);
   } catch (err) {
     return sendResponse(res, false, null, "Invalid token", statusType.UNAUTHORIZED);
   }
 });
+
 const logoutUser = asyncHandler(async (req, res) => {
 
   res

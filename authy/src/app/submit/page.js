@@ -1,45 +1,47 @@
-'use client';
-import React, { useState } from 'react';
-import { Upload, X, Plus, AlertCircle } from 'lucide-react';
-import axios from 'axios';
-import { useRouter } from 'next/navigation';
+"use client";
 
-const SubmitProjectPage = () => {
+import { motion } from "framer-motion";
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { Upload, X, AlertCircle } from "lucide-react";
+import { createProject } from "@/services/project/projectServices";
+
+export default function SubmitProjectPage() {
   const [formData, setFormData] = useState({
-    title: '',
-    description: '',
-    category: 'Community',
-    goalAmount: '',
-    images: []
+    title: "",
+    description: "",
+    category: "Community",
+    goalAmount: "",
+    images: [],
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [error, setError] = useState('');
-  const [dragActive, setDragActive] = useState(false); // <-- Add this
+  const [error, setError] = useState("");
+  const [dragActive, setDragActive] = useState(false);
 
   const router = useRouter();
 
   const categories = [
-    { value: 'Education', label: 'Education' },
-    { value: 'Environment', label: 'Environment' },
-    { value: 'Community', label: 'Community' },
-    { value: 'Health', label: 'Health' },
-    { value: 'Other', label: 'Other' }
+    { value: "Education", label: "Education" },
+    { value: "Environment", label: "Environment" },
+    { value: "Community", label: "Community" },
+    { value: "Health", label: "Health" },
+    { value: "Other", label: "Other" },
   ];
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+    setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
   const handleImageUpload = (files) => {
     const newImages = Array.from(files).slice(0, 5 - formData.images.length);
-    setFormData(prev => ({ ...prev, images: [...prev.images, ...newImages] }));
+    setFormData((prev) => ({ ...prev, images: [...prev.images, ...newImages] }));
   };
 
   const removeImage = (index) => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      images: prev.images.filter((_, i) => i !== index)
+      images: prev.images.filter((_, i) => i !== index),
     }));
   };
 
@@ -63,176 +65,148 @@ const SubmitProjectPage = () => {
     }
   };
 
-
-
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsSubmitting(true);
-    setError('');
+    setError("");
 
     try {
-      // Get token from localStorage (assuming you store it there after login)
-      const token = localStorage.getItem('token');
-
-      if (!token) {
-        setError('You must be logged in to submit a project.');
+      const user = JSON.parse(localStorage.getItem("user"));
+      if (!user?.token) {
+        setError("You must be logged in to submit a project.");
         setIsSubmitting(false);
         return;
       }
 
-      // Create FormData object to handle file uploads
       const submitData = new FormData();
-      submitData.append('title', formData.title);
-      submitData.append('description', formData.description);
-      submitData.append('category', formData.category);
-      submitData.append('goalAmount', formData.goalAmount);
+submitData.append("title", formData.title);
+submitData.append("description", formData.description);
+submitData.append("category", formData.category);
+submitData.append("goalAmount", formData.goalAmount);
+formData.images.forEach((image) => submitData.append("images", image));
 
-      // Append each image file
-      formData.images.forEach((image, index) => {
-        submitData.append('images', image);
-      });
+// 👇 Correct way to log FormData
+for (let [key, value] of submitData.entries()) {
+  console.log(key, value);
+}
 
-      const response = await axios.post(
-        'http://localhost:8000/api/projects/create',
-        submitData,
-        {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'multipart/form-data'
-          }
-        }
-      );
+      const response = await createProject(submitData, router);
 
-      if (response.data.success) {
-        alert('Project submitted successfully! It will be reviewed by our team within 24-48 hours.');
-        // Reset form
+      if (response?.data?.success) {
+        alert("✅ Project submitted successfully!");
         setFormData({
-          title: '',
-          description: '',
-          category: 'Community',
-          goalAmount: '',
-          images: []
+          title: "",
+          description: "",
+          category: "Community",
+          goalAmount: "",
+          images: [],
         });
-        // Optionally redirect to projects page
-        // router.push('/projects');
+        // router.push("/projects");
       } else {
-        setError(response.data.message || 'Failed to submit project');
+        setError(response?.data?.message || "Failed to submit project");
       }
     } catch (err) {
-      console.error('Error submitting project:', err);
-      if (err.response?.data?.message) {
-        setError(err.response.data.message);
-      } else if (err.response?.data?.errors) {
-        setError(err.response.data.errors.join(', '));
-      } else {
-        setError('Failed to submit project. Please try again.');
-      }
+      console.error("❌ Error submitting project:", err);
+      setError(err.response?.data?.message || "Something went wrong");
     } finally {
       setIsSubmitting(false);
     }
   };
 
   return (
-    <div className="min-h-screen pt-8 pb-16">
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center mb-12">
-          <h1 className="text-4xl font-bold text-gray-900 mb-4">
+    <div className="min-h-screen bg-gradient-to-br from-emerald-50 to-teal-100 py-8 px-4">
+      <div className="max-w-4xl mx-auto">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+          className="bg-white rounded-2xl shadow-xl overflow-hidden p-8"
+        >
+          <h1 className="text-4xl font-bold text-gray-900 mb-6 text-center">
             Submit Your Project
           </h1>
-          <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-            Have a community project that needs funding? Share your vision with us and get the support you need.
-          </p>
-        </div>
 
-        {error && (
-          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl mb-6 flex items-center">
-            <AlertCircle className="w-5 h-5 mr-2" />
-            {error}
-          </div>
-        )}
-
-        <form onSubmit={handleSubmit} className="space-y-8">
-          {/* Project Information */}
-          <div className="bg-white rounded-2xl shadow-lg p-8">
-            <h2 className="text-2xl font-bold text-gray-900 mb-6">Project Information</h2>
-
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <div className="lg:col-span-2">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Project Title *
-                </label>
-                <input
-                  type="text"
-                  name="title"
-                  value={formData.title}
-                  onChange={handleInputChange}
-                  required
-                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all duration-200"
-                  placeholder="Give your project a compelling title"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Category *
-                </label>
-                <select
-                  name="category"
-                  value={formData.category}
-                  onChange={handleInputChange}
-                  required
-                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all duration-200"
-                >
-                  {categories.map(category => (
-                    <option key={category.value} value={category.value}>
-                      {category.label}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Goal Amount (₹) *
-                </label>
-                <input
-                  type="number"
-                  name="goalAmount"
-                  value={formData.goalAmount}
-                  onChange={handleInputChange}
-                  required
-                  min="1000"
-                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all duration-200"
-                  placeholder="Minimum ₹1,000"
-                />
-              </div>
-
-              <div className="lg:col-span-2">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Detailed Description *
-                </label>
-                <textarea
-                  name="description"
-                  value={formData.description}
-                  onChange={handleInputChange}
-                  required
-                  rows={6}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all duration-200"
-                  placeholder="Provide a comprehensive description of your project, its goals, and expected impact..."
-                />
-              </div>
+          {error && (
+            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl mb-6 flex items-center">
+              <AlertCircle className="w-5 h-5 mr-2" />
+              {error}
             </div>
-          </div>
+          )}
 
-          {/* Project Images */}
-          <div className="bg-white rounded-2xl shadow-lg p-8">
-            <h2 className="text-2xl font-bold text-gray-900 mb-6">Project Images</h2>
+          <form onSubmit={handleSubmit} className="space-y-8">
+            {/* Project Information */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Project Title *
+              </label>
+              <input
+                type="text"
+                name="title"
+                value={formData.title}
+                onChange={handleInputChange}
+                required
+                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all duration-200 text-black"
+                placeholder="Give your project a compelling title"
+              />
+            </div>
 
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Category *
+              </label>
+              <select
+                name="category"
+                value={formData.category}
+                onChange={handleInputChange}
+                required
+                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all duration-200 text-black"
+              >
+                {categories.map((c) => (
+                  <option key={c.value} value={c.value}>
+                    {c.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Goal Amount (₹) *
+              </label>
+              <input
+                type="number"
+                name="goalAmount"
+                value={formData.goalAmount}
+                onChange={handleInputChange}
+                required
+                min="1000"
+                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all duration-200 text-black"
+                placeholder="Minimum ₹1,000"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Detailed Description *
+              </label>
+              <textarea
+                name="description"
+                value={formData.description}
+                onChange={handleInputChange}
+                required
+                rows={6}
+                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all duration-200 text-black"
+                placeholder="Provide a comprehensive description..."
+              />
+            </div>
+
+            {/* Image Upload */}
             <div
-              className={`border-2 border-dashed rounded-xl p-8 text-center transition-all duration-200 ${dragActive
-                  ? 'border-emerald-500 bg-emerald-50'
-                  : 'border-gray-300 hover:border-gray-400'
-                }`}
+              className={`border-2 border-dashed rounded-xl p-8 text-center transition-all duration-200 ${
+                dragActive
+                  ? "border-emerald-500 bg-emerald-50"
+                  : "border-gray-300 hover:border-gray-400"
+              }`}
               onDragEnter={handleDrag}
               onDragLeave={handleDrag}
               onDragOver={handleDrag}
@@ -249,7 +223,9 @@ const SubmitProjectPage = () => {
                 type="file"
                 accept="image/*"
                 multiple
-                onChange={(e) => e.target.files && handleImageUpload(e.target.files)}
+                onChange={(e) =>
+                  e.target.files && handleImageUpload(e.target.files)
+                }
                 className="hidden"
                 id="image-upload"
               />
@@ -285,22 +261,20 @@ const SubmitProjectPage = () => {
                 ))}
               </div>
             )}
-          </div>
 
-          {/* Submit Button */}
-          <div className="text-center">
-            <button
-              type="submit"
-              disabled={isSubmitting}
-              className="bg-emerald-600 text-white px-8 py-4 rounded-xl hover:bg-emerald-700 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed text-lg font-medium"
-            >
-              {isSubmitting ? 'Submitting...' : 'Submit Project'}
-            </button>
-          </div>
-        </form>
+            {/* Submit */}
+            <div className="text-center">
+              <button
+                type="submit"
+                disabled={isSubmitting}
+                className="bg-emerald-600 text-white px-8 py-4 rounded-xl hover:bg-emerald-700 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed text-lg font-medium"
+              >
+                {isSubmitting ? "Submitting..." : "Submit Project"}
+              </button>
+            </div>
+          </form>
+        </motion.div>
       </div>
     </div>
   );
-};
-
-export default SubmitProjectPage;
+}

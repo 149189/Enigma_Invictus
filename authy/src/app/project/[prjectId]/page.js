@@ -3,8 +3,9 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter, useParams } from 'next/navigation';
-import { ArrowLeft, MapPin, Calendar, Users, Share2, Heart, CheckCircle, TrendingUp } from 'lucide-react';
+import { ArrowLeft, Calendar, Users, Share2, Heart, CheckCircle } from 'lucide-react';
 import axios from 'axios';
+import { ethers } from 'ethers';
 
 const ProjectDetailsPage = () => {
   const { prjectId } = useParams();
@@ -14,6 +15,8 @@ const ProjectDetailsPage = () => {
   const [project, setProject] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [customAmount, setCustomAmount] = useState('');
+  const [raisedAmount, setRaisedAmount] = useState(0);
 
   // Fetch project details from API
   useEffect(() => {
@@ -21,9 +24,9 @@ const ProjectDetailsPage = () => {
       try {
         setLoading(true);
         const response = await axios.get(`http://localhost:8000/api/projects/${prjectId}/get_id`);
-        
         if (response.data.success) {
           setProject(response.data.project);
+          setRaisedAmount(response.data.project.raisedAmount || 0);
         } else {
           setError('Failed to fetch project details');
         }
@@ -68,8 +71,8 @@ const ProjectDetailsPage = () => {
     );
   }
 
-  const progressPercentage = (project.raisedAmount / project.goalAmount) * 100;
-  
+  const progressPercentage = (raisedAmount / project.goalAmount) * 100;
+
   const getCategoryColor = (category) => {
     const colors = {
       Education: 'bg-blue-100 text-blue-800 border-blue-200',
@@ -81,19 +84,63 @@ const ProjectDetailsPage = () => {
     return colors[category] || 'bg-gray-100 text-gray-800 border-gray-200';
   };
 
-  const handleDonate = (amount) => {
-    router.push(`/payment/${project._id}?amount=${amount}`);
+  // Update raised amount after 10 seconds
+  const simulateDonation = (amount) => {
+    if (!amount || amount <= 0) {
+      alert('Enter a valid amount');
+      return;
+    }
+    setTimeout(() => {
+      setRaisedAmount(prev => prev + Number(amount));
+      alert(`₹${amount} added successfully!`);
+    }, 10000); // 10 seconds
   };
 
-  // Since the API doesn't provide these fields, we'll use placeholders
-  const daysLeft = 30; // Placeholder - you might want to calculate this based on createdAt
-  const donorCount = 0; // Placeholder - you might want to add this to your API
-  const isVerified = project.status === 'approved'; // Consider approved projects as verified
+  const handleUPIDonate = (amount) => {
+    simulateDonation(amount);
+  };
+
+const handleBlockchainPayment = async () => {
+  if (!customAmount || customAmount <= 0) {
+    alert('Enter a valid amount');
+    return;
+  }
+
+  if (!window.ethereum) {
+    alert('MetaMask is not installed');
+    return;
+  }
+
+  try {
+    await window.ethereum.request({ method: 'eth_requestAccounts' });
+    const provider = new ethers.BrowserProvider(window.ethereum);
+    const signer = await provider.getSigner();
+
+    // Convert INR to ETH safely (limit to 6 decimals)
+    const ethAmountInEth = (customAmount * 0.000012).toFixed(6); 
+    const ethAmount = ethers.parseEther(ethAmountInEth.toString());
+
+    const tx = await signer.sendTransaction({
+      to: '0xYourProjectWalletAddressHere', // replace with your wallet
+      value: ethAmount
+    });
+
+    console.log('Transaction sent:', tx);
+    simulateDonation(customAmount);
+  } catch (err) {
+    console.error(err);
+    alert('Transaction failed');
+  }
+};
+
+
+  const daysLeft = 30;
+  const donorCount = 0;
+  const isVerified = project.status === 'approved';
 
   return (
     <div className="min-h-screen pt-8 pb-16">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Back Button */}
         <button
           onClick={() => router.back()}
           className="flex items-center space-x-2 text-gray-600 hover:text-emerald-600 mb-6 transition-colors duration-200"
@@ -103,9 +150,7 @@ const ProjectDetailsPage = () => {
         </button>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Main Content */}
           <div className="lg:col-span-2">
-            {/* Hero Image */}
             <div className="relative rounded-2xl overflow-hidden mb-8">
               <img
                 src={project.images && project.images.length > 0 
@@ -126,12 +171,8 @@ const ProjectDetailsPage = () => {
               </div>
             </div>
 
-            {/* Project Header */}
             <div className="mb-8">
-              <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-                {project.title}
-              </h1>
-              
+              <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">{project.title}</h1>
               <div className="flex flex-wrap items-center gap-6 text-gray-600 mb-6">
                 <div className="flex items-center space-x-2">
                   <img
@@ -170,13 +211,9 @@ const ProjectDetailsPage = () => {
               </div>
             </div>
 
-            {/* Navigation Tabs */}
             <div className="border-b border-gray-200 mb-8">
               <nav className="flex space-x-8">
-                {[
-                  { id: 'about', label: 'About' },
-                  // Removed other tabs since API doesn't provide this data
-                ].map(tab => (
+                {[{ id: 'about', label: 'About' }].map(tab => (
                   <button
                     key={tab.id}
                     onClick={() => setActiveTab(tab.id)}
@@ -192,14 +229,10 @@ const ProjectDetailsPage = () => {
               </nav>
             </div>
 
-            {/* Tab Content */}
             <div className="mb-8">
               {activeTab === 'about' && (
                 <div className="prose max-w-none">
-                  <p className="text-gray-700 leading-relaxed text-lg mb-6">
-                    {project.description}
-                  </p>
-                  
+                  <p className="text-gray-700 leading-relaxed text-lg mb-6">{project.description}</p>
                   {project.images && project.images.length > 1 && (
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-8">
                       {project.images.slice(1).map((image, index) => (
@@ -217,14 +250,12 @@ const ProjectDetailsPage = () => {
             </div>
           </div>
 
-          {/* Sidebar */}
           <div className="lg:col-span-1">
             <div className="bg-white rounded-2xl shadow-lg p-6 sticky top-24">
-              {/* Progress */}
               <div className="mb-6">
                 <div className="flex justify-between items-center mb-3">
                   <span className="text-2xl font-bold text-gray-900">
-                    ₹{project.raisedAmount.toLocaleString()}
+                    ₹{raisedAmount}
                   </span>
                   <span className="text-gray-500">
                     ₹{project.goalAmount.toLocaleString()}
@@ -241,14 +272,13 @@ const ProjectDetailsPage = () => {
                 </div>
               </div>
 
-              {/* Quick Donate */}
               <div className="space-y-3 mb-6">
                 <h3 className="font-semibold text-gray-900">Quick Donate</h3>
                 <div className="grid grid-cols-2 gap-2">
                   {[50, 100, 500, 1000].map(amount => (
                     <button
                       key={amount}
-                      onClick={() => handleDonate(amount)}
+                      onClick={() => handleUPIDonate(amount)}
                       className="bg-emerald-50 hover:bg-emerald-100 text-emerald-700 py-2 px-4 rounded-lg font-medium transition-colors duration-200"
                     >
                       ₹{amount}
@@ -257,10 +287,9 @@ const ProjectDetailsPage = () => {
                 </div>
               </div>
 
-              {/* Custom Amount */}
               <div className="mb-6">
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Custom Amount
+                  Enter Amount
                 </label>
                 <div className="flex">
                   <span className="inline-flex items-center px-3 rounded-l-lg border border-r-0 border-gray-300 bg-gray-50 text-gray-500">
@@ -269,20 +298,28 @@ const ProjectDetailsPage = () => {
                   <input
                     type="number"
                     placeholder="Enter amount"
+                    value={customAmount}
+                    onChange={(e) => setCustomAmount(e.target.value)}
                     className="flex-1 px-3 py-2 border border-gray-300 rounded-r-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
                   />
                 </div>
               </div>
 
-              {/* Donate Button */}
-              <button
-                onClick={() => handleDonate(100)}
-                className="w-full bg-gradient-to-r from-emerald-600 to-blue-600 text-white py-4 rounded-xl font-semibold hover:shadow-lg hover:scale-105 transition-all duration-300 mb-4"
-              >
-                Donate Now
-              </button>
+              <div className="flex gap-4 mb-4">
+                <button
+                  onClick={() => handleUPIDonate(Number(customAmount))}
+                  className="flex-1 bg-emerald-600 text-white py-3 rounded-xl font-semibold hover:shadow-lg hover:scale-105 transition-all duration-300"
+                >
+                  UPI
+                </button>
+                <button
+                  onClick={handleBlockchainPayment}
+                  className="flex-1 bg-gradient-to-r from-purple-600 to-blue-600 text-white py-3 rounded-xl font-semibold hover:shadow-lg hover:scale-105 transition-all duration-300"
+                >
+                  Blockchain
+                </button>
+              </div>
 
-              {/* Project Stats */}
               <div className="border-t pt-6 space-y-3">
                 <div className="flex justify-between text-sm">
                   <span className="text-gray-600">Days remaining</span>
