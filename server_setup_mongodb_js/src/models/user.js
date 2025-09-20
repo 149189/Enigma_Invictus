@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import bcrypt from "bcryptjs";
 
 const userSchema = new mongoose.Schema(
   {
@@ -13,6 +14,7 @@ const userSchema = new mongoose.Schema(
       required: true,
       lowercase: true,
       trim: true,
+      unique: true
     },
 
     password: {
@@ -38,33 +40,35 @@ const userSchema = new mongoose.Schema(
       type: String,
       select: false,
     },
-    isVerified: {
-      type: Boolean,
-      default: false,
-    },
+
     avatar: {
       type: String,
     },
 
-
-    role: {
-      type: String,
-      enum: ["user", "admin", "superadmin"],
-      default: "user",
-    },
+    // user account control
     status: {
       type: String,
-      enum: ["active", "inactive", "banned"],
+      enum: ["active", "banned"],
       default: "active",
-    }, 
-    
+    },
+
+    // optional OTP login/verification fields
     verificationOTP: String,
     otpExpiry: Date
   },
   { timestamps: true }
 );
 
+// Ensure unique (email + provider) combination
 userSchema.index({ email: 1, provider: 1 }, { unique: true });
+
+// Hash password before saving
+userSchema.pre("save", async function (next) {
+  if (!this.isModified("password")) return next();
+  const salt = await bcrypt.genSalt(10);
+  this.password = await bcrypt.hash(this.password, salt);
+  next();
+});
 
 const User = mongoose.model("User", userSchema);
 export default User;
