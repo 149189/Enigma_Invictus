@@ -1,5 +1,6 @@
 import Project from "../../models/project.js";
 import User from "../../models/user.js";
+import { verifyProjectById } from "../../services/aiService.js";
 
 // Create a new crowdfunding project
 export const createProject = async (req, res) => {
@@ -61,16 +62,45 @@ export const createProject = async (req, res) => {
     // Save the project to database
     const savedProject = await project.save();
 
-    // Populate creator details for response
-    await savedProject.populate({
+    // Run AI verification for this project (dry run to decide locally)
+    let refreshed;
+    try {
+      const aiResult = await verifyProjectById(String(savedProject._id), { dryRun: true });
+      if (aiResult && typeof aiResult.prediction !== 'undefined' && typeof aiResult.confidence === 'number') {
+        const confidence = aiResult.confidence;
+        const prediction = aiResult.prediction; // 1 = approved, 0 = rejected (as per AI service)
+        const notes = aiResult.notes || '';
+
+        // Apply 50% threshold for auto-approval only if AI predicts approval
+        if (prediction === 1 && confidence >= 0.5) {
+          savedProject.status = 'approved';
+          savedProject.autoVerified = true;
+          savedProject.verificationConfidence = confidence;
+          savedProject.verificationNotes = notes;
+          savedProject.verifiedAt = new Date();
+          await savedProject.save();
+        } else {
+          // Keep pending but store AI metadata for admin review/UI
+          savedProject.autoVerified = false;
+          savedProject.verificationConfidence = confidence;
+          savedProject.verificationNotes = notes;
+          await savedProject.save();
+        }
+      }
+    } catch (_) {
+      // If AI service failed, continue without blocking creation
+    }
+
+    // Load latest version with creator populated
+    refreshed = await Project.findById(savedProject._id).populate({
       path: "creator",
-      select: "name email avatar", // Only return these fields
+      select: "name email avatar",
     });
 
     res.status(201).json({
       success: true,
-      message: "Project created successfully. Waiting for admin approval.",
-      project: savedProject,
+      message: "Project created successfully. AI auto-verification has been applied.",
+      project: refreshed,
     });
   } catch (error) {
     console.error("Error creating project:", error);

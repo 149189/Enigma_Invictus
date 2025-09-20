@@ -5,6 +5,7 @@ import json
 from auto_verification_service import MongoDBProjectVerifier
 import os
 from dotenv import load_dotenv
+from bson import ObjectId
 
 load_dotenv()
 
@@ -69,7 +70,12 @@ def verify_single_project(project_id):
     try:
         # Get single project from database
         projects_collection = get_verifier().db.projects
-        project = projects_collection.find_one({"_id": project_id})
+        # Ensure we search by ObjectId
+        try:
+            oid = ObjectId(project_id)
+        except Exception:
+            return jsonify({"error": "Invalid project ID"}), 400
+        project = projects_collection.find_one({"_id": oid})
         
         if not project:
             return jsonify({"error": "Project not found"}), 404

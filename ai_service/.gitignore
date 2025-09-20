@@ -1,0 +1,48 @@
+# Python bytecode and cache
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environments (local venv created in this folder)
+.venv/
+venv/
+env/
+ENV/
+venv.bak/
+env.bak/
+lib/
+Lib/
+Scripts/
+bin/
+Include/
+include/
+pyvenv.cfg
+
+# Environment files / secrets
+.env
+*.env
+
+# Logs
+*.log
+
+# Testing/coverage
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Build/dist
+build/
+dist/
+*.egg-info/
+
+# Model artifacts
+*.pkl
+*.joblib
