@@ -4,13 +4,23 @@ import {
   validateProject,
   getDonations,
   getDonationStats,
-  getProjectStats
+  getProjectStats,
+  registerAdmin,
+  loginAdmin,
+  getAdminProfile
 } from "./adminController.js";
-import { verifyJWT } from "../../middlewares/auth.middleware.js"; // Admin authentication middleware
+import { adminProtect } from "../../middlewares/auth.middleware.js"; // Admin authentication middleware
 
 const router = express.Router();
 
-router.use(verifyJWT);
+// router.post("/register", registerAdmin);
+router.post("/login", loginAdmin);
+
+router.use(adminProtect);
+
+
+// Protected route
+router.get("/profile", getAdminProfile);
 
 // Project management routes
 router.get("/projects", getProjects);
