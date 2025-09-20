@@ -13,7 +13,7 @@ const projectSchema = new mongoose.Schema({
   validatedBy: { type: mongoose.Schema.Types.ObjectId, ref: "Admin" },
 
   // Optional cover image
-  image: String
+  images: [{ type: String }],
 }, { timestamps: true });
 
 const Project = mongoose.model("Project", projectSchema);
