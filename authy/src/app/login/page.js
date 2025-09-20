@@ -29,7 +29,7 @@ export default function Home() {
         router.push("/welcome");
       }
     };
-  
+  checkAuth();
   } );
 
   const handleChange = (e) => {
