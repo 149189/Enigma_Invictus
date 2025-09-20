@@ -1,24 +1,70 @@
 import mongoose from "mongoose";
-import bcrypt from "bcryptjs";
 
-const userSchema = new mongoose.Schema({
-  name: { type: String, required: true },
-  email: { type: String, required: true, unique: true, lowercase: true, trim: true },
-  password: { type: String, required: true, minlength: 6 }, // hashed
-  avatar: { type: String },
+const userSchema = new mongoose.Schema(
+  {
+    name: {
+      type: String,
+      required: true,
+      minlength: 2,
+      trim: true,
+    },
+    email: {
+      type: String,
+      required: true,
+      lowercase: true,
+      trim: true,
+    },
 
-  // Track donations and created projects
-  totalDonated: { type: Number, default: 0 },
-  totalProjects: { type: Number, default: 0 }
-}, { timestamps: true });
+    password: {
+      type: String,
+      required: function () {
+        return this.provider === "local";
+      },
+      minlength: 6,
+      select: false,
+    },
 
-// Password hashing
-userSchema.pre("save", async function (next) {
-  if (!this.isModified("password")) return next();
-  const salt = await bcrypt.genSalt(10);
-  this.password = await bcrypt.hash(this.password, salt);
-  next();
-});
+    provider: {
+      type: String,
+      enum: ["local", "google"],
+      default: "local",
+    },
+    providerId: {
+      type: String,
+      sparse: true,
+    },
+
+    refreshToken: {
+      type: String,
+      select: false,
+    },
+    isVerified: {
+      type: Boolean,
+      default: false,
+    },
+    avatar: {
+      type: String,
+    },
+
+
+    role: {
+      type: String,
+      enum: ["user", "admin", "superadmin"],
+      default: "user",
+    },
+    status: {
+      type: String,
+      enum: ["active", "inactive", "banned"],
+      default: "active",
+    }, 
+    
+    verificationOTP: String,
+    otpExpiry: Date
+  },
+  { timestamps: true }
+);
+
+userSchema.index({ email: 1, provider: 1 }, { unique: true });
 
 const User = mongoose.model("User", userSchema);
 export default User;
