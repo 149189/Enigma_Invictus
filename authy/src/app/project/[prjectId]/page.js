@@ -1,23 +1,62 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter, useParams } from 'next/navigation';
 import { ArrowLeft, MapPin, Calendar, Users, Share2, Heart, CheckCircle, TrendingUp } from 'lucide-react';
-import { mockProjects,mockUsers } from '../../../data/mockData';
+import axios from 'axios';
+
 const ProjectDetailsPage = () => {
-  const { prjectId } = useParams(); // dynamic param from folder [prjectId]
+  const { prjectId } = useParams();
   const router = useRouter();
   const [activeTab, setActiveTab] = useState('about');
   const [isFollowing, setIsFollowing] = useState(false);
+  const [project, setProject] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  const project = mockProjects.find(p => p.id === prjectId);
+  // Fetch project details from API
+  useEffect(() => {
+    const fetchProject = async () => {
+      try {
+        setLoading(true);
+        const response = await axios.get(`http://localhost:8000/api/projects/${prjectId}/get_id`);
+        
+        if (response.data.success) {
+          setProject(response.data.project);
+        } else {
+          setError('Failed to fetch project details');
+        }
+      } catch (err) {
+        console.error('Error fetching project:', err);
+        setError('Failed to load project. Please try again later.');
+      } finally {
+        setLoading(false);
+      }
+    };
 
-  if (!project) {
+    if (prjectId) {
+      fetchProject();
+    }
+  }, [prjectId]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen pt-16 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading project details...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error || !project) {
     return (
       <div className="min-h-screen pt-16 flex items-center justify-center">
         <div className="text-center">
           <h2 className="text-2xl font-bold text-gray-900 mb-4">Project Not Found</h2>
+          <p className="text-gray-600 mb-6">{error || 'The project you are looking for does not exist.'}</p>
           <Link
             href="/projects"
             className="bg-emerald-600 text-white px-6 py-3 rounded-lg hover:bg-emerald-700 transition-colors duration-200"
@@ -30,19 +69,26 @@ const ProjectDetailsPage = () => {
   }
 
   const progressPercentage = (project.raisedAmount / project.goalAmount) * 100;
-  const getCategoryColor = () => {
+  
+  const getCategoryColor = (category) => {
     const colors = {
-      education: 'bg-blue-100 text-blue-800 border-blue-200',
-      environment: 'bg-green-100 text-green-800 border-green-200',
-      community: 'bg-purple-100 text-purple-800 border-purple-200',
-      health: 'bg-pink-100 text-pink-800 border-pink-200',
-      emergency: 'bg-red-100 text-red-800 border-red-200'
+      Education: 'bg-blue-100 text-blue-800 border-blue-200',
+      Environment: 'bg-green-100 text-green-800 border-green-200',
+      Community: 'bg-purple-100 text-purple-800 border-purple-200',
+      Health: 'bg-pink-100 text-pink-800 border-pink-200',
+      Other: 'bg-orange-100 text-orange-800 border-orange-200'
     };
-    return colors;
+    return colors[category] || 'bg-gray-100 text-gray-800 border-gray-200';
   };
+
   const handleDonate = (amount) => {
-    router.push(`/payment/${project.id}?amount=${amount}`);
+    router.push(`/payment/${project._id}?amount=${amount}`);
   };
+
+  // Since the API doesn't provide these fields, we'll use placeholders
+  const daysLeft = 30; // Placeholder - you might want to calculate this based on createdAt
+  const donorCount = 0; // Placeholder - you might want to add this to your API
+  const isVerified = project.status === 'approved'; // Consider approved projects as verified
 
   return (
     <div className="min-h-screen pt-8 pb-16">
@@ -62,15 +108,17 @@ const ProjectDetailsPage = () => {
             {/* Hero Image */}
             <div className="relative rounded-2xl overflow-hidden mb-8">
               <img
-                src={project.images[0]}
+                src={project.images && project.images.length > 0 
+                  ? project.images[0] 
+                  : 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=600'}
                 alt={project.title}
                 className="w-full h-64 md:h-96 object-cover"
               />
-              <div className="absolute top-6 left-6 flex items-center space-x-3 ">
-                <span className={`px-3 py-1 rounded-full text-sm font-semibold capitalize border bg-white text-black ${getCategoryColor(project.category)}`}>
+              <div className="absolute top-6 left-6 flex items-center space-x-3">
+                <span className={`px-3 py-1 rounded-full text-sm font-semibold capitalize border ${getCategoryColor(project.category)}`}>
                   {project.category}
                 </span>
-                {project.verified && (
+                {isVerified && (
                   <div className="bg-emerald-500 text-white p-2 rounded-full">
                     <CheckCircle className="w-4 h-4" />
                   </div>
@@ -87,23 +135,19 @@ const ProjectDetailsPage = () => {
               <div className="flex flex-wrap items-center gap-6 text-gray-600 mb-6">
                 <div className="flex items-center space-x-2">
                   <img
-                    src={project.creatorAvatar}
-                    alt={project.creatorName}
+                    src={project.creator?.avatar || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100'}
+                    alt={project.creator?.name}
                     className="w-8 h-8 rounded-full object-cover"
                   />
-                  <span className="font-medium">{project.creatorName}</span>
-                </div>
-                <div className="flex items-center space-x-1">
-                  <MapPin className="w-4 h-4" />
-                  <span>{project.location}</span>
+                  <span className="font-medium">{project.creator?.name}</span>
                 </div>
                 <div className="flex items-center space-x-1">
                   <Calendar className="w-4 h-4" />
-                  <span>{project.daysLeft} days left</span>
+                  <span>{daysLeft} days left</span>
                 </div>
                 <div className="flex items-center space-x-1">
                   <Users className="w-4 h-4" />
-                  <span>{project.donorCount} donors</span>
+                  <span>{donorCount} donors</span>
                 </div>
               </div>
 
@@ -131,9 +175,7 @@ const ProjectDetailsPage = () => {
               <nav className="flex space-x-8">
                 {[
                   { id: 'about', label: 'About' },
-                  { id: 'updates', label: `Updates (${project.updates.length})` },
-                  { id: 'milestones', label: 'Milestones' },
-                  { id: 'impact', label: 'Impact' }
+                  // Removed other tabs since API doesn't provide this data
                 ].map(tab => (
                   <button
                     key={tab.id}
@@ -158,7 +200,7 @@ const ProjectDetailsPage = () => {
                     {project.description}
                   </p>
                   
-                  {project.images.length > 1 && (
+                  {project.images && project.images.length > 1 && (
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-8">
                       {project.images.slice(1).map((image, index) => (
                         <img
@@ -170,104 +212,6 @@ const ProjectDetailsPage = () => {
                       ))}
                     </div>
                   )}
-                </div>
-              )}
-
-              {activeTab === 'updates' && (
-                <div className="space-y-6">
-                  {project.updates.length > 0 ? (
-                    project.updates.map(update => (
-                      <div key={update.id} className="bg-gray-50 rounded-xl p-6">
-                        <div className="flex items-center space-x-3 mb-4">
-                          <img
-                            src={project.creatorAvatar}
-                            alt={project.creatorName}
-                            className="w-10 h-10 rounded-full object-cover"
-                          />
-                          <div>
-                            <h3 className="font-semibold text-gray-900">{update.title}</h3>
-                            <p className="text-sm text-gray-500">
-                              {update.createdAt.toLocaleDateString()}
-                            </p>
-                          </div>
-                        </div>
-                        <p className="text-gray-700 mb-4">{update.content}</p>
-                        {update.images.length > 0 && (
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            {update.images.map((image, index) => (
-                              <img
-                                key={index}
-                                src={image}
-                                alt={`Update ${index + 1}`}
-                                className="rounded-lg object-cover h-32 w-full"
-                              />
-                            ))}
-                          </div>
-                        )}
-                      </div>
-                    ))
-                  ) : (
-                    <p className="text-gray-500 text-center py-8">No updates yet.</p>
-                  )}
-                </div>
-              )}
-
-              {activeTab === 'milestones' && (
-                <div className="space-y-4">
-                  {project.milestones.map((milestone, index) => (
-                    <div
-                      key={milestone.id}
-                      className={`p-6 rounded-xl border-2 ${
-                        milestone.achieved
-                          ? 'border-emerald-200 bg-emerald-50'
-                          : 'border-gray-200 bg-white'
-                      }`}
-                    >
-                      <div className="flex items-center justify-between mb-3">
-                        <h3 className={`font-semibold ${
-                          milestone.achieved ? 'text-emerald-900' : 'text-gray-900'
-                        }`}>
-                          {milestone.title}
-                        </h3>
-                        {milestone.achieved && (
-                          <CheckCircle className="w-6 h-6 text-emerald-600" />
-                        )}
-                      </div>
-                      <p className={`mb-3 ${
-                        milestone.achieved ? 'text-emerald-700' : 'text-gray-600'
-                      }`}>
-                        {milestone.description}
-                      </p>
-                      <div className={`text-sm font-medium ${
-                        milestone.achieved ? 'text-emerald-800' : 'text-gray-500'
-                      }`}>
-                        Target: ₹{milestone.targetAmount.toLocaleString()}
-                        {milestone.achieved && milestone.achievedAt && (
-                          <span className="ml-4">
-                            Achieved on {milestone.achievedAt.toLocaleDateString()}
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-
-              {activeTab === 'impact' && (
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                  {project.impactMetrics.map((metric, index) => (
-                    <div key={index} className="bg-gradient-to-br from-blue-50 to-emerald-50 rounded-xl p-6 text-center">
-                      <div className="bg-white w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-4">
-                        <TrendingUp className="w-6 h-6 text-emerald-600" />
-                      </div>
-                      <div className="text-2xl font-bold text-gray-900 mb-2">
-                        {metric.value.toLocaleString()}
-                      </div>
-                      <div className="text-sm text-gray-600">
-                        {metric.label} {metric.unit && `(${metric.unit})`}
-                      </div>
-                    </div>
-                  ))}
                 </div>
               )}
             </div>
@@ -293,7 +237,7 @@ const ProjectDetailsPage = () => {
                   ></div>
                 </div>
                 <div className="text-sm text-gray-600">
-                  {progressPercentage.toFixed(1)}% funded • {project.donorCount} donors
+                  {progressPercentage.toFixed(1)}% funded • {donorCount} donors
                 </div>
               </div>
 
@@ -342,16 +286,16 @@ const ProjectDetailsPage = () => {
               <div className="border-t pt-6 space-y-3">
                 <div className="flex justify-between text-sm">
                   <span className="text-gray-600">Days remaining</span>
-                  <span className="font-semibold text-gray-900">{project.daysLeft}</span>
+                  <span className="font-semibold text-gray-900">{daysLeft}</span>
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-gray-600">Total donors</span>
-                  <span className="font-semibold text-gray-900">{project.donorCount}</span>
+                  <span className="font-semibold text-gray-900">{donorCount}</span>
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-gray-600">Created</span>
                   <span className="font-semibold text-gray-900">
-                    {project.createdAt.toLocaleDateString()}
+                    {new Date(project.createdAt).toLocaleDateString()}
                   </span>
                 </div>
               </div>

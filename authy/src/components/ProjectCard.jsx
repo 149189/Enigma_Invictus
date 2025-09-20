@@ -21,7 +21,7 @@ const ProjectCard = ({ project }) => {
     <div className="bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden group hover:transform hover:scale-105">
       <div className="relative">
         <img
-          src={project.images[0]}
+          src={project.images?.[0] || 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=600'}
           alt={project.title}
           className="w-full h-48 object-cover group-hover:scale-110 transition-transform duration-500"
         />

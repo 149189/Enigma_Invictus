@@ -17,7 +17,8 @@ export default function Welcome() {
       if (response?.data) {
         const currentUser = {
           name: response.data.data.name,
-          avatar: response.data.data.avatar
+          avatar: response.data.data.avatar,
+          token: response.data.accessToken
         };
         setUser(currentUser);
         localStorage.setItem("user", JSON.stringify(currentUser));
