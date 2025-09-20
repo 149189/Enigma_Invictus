@@ -48,7 +48,7 @@ const userSchema = new mongoose.Schema(
     // user account control
     status: {
       type: String,
-      enum: ["active", "inactive", "banned"],
+      enum: ["active", "banned"],
       default: "active",
     },
 
