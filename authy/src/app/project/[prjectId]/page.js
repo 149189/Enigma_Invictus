@@ -66,8 +66,8 @@ const ProjectDetailsPage = () => {
                 alt={project.title}
                 className="w-full h-64 md:h-96 object-cover"
               />
-              <div className="absolute top-6 left-6 flex items-center space-x-3">
-                <span className={`px-3 py-1 rounded-full text-sm font-semibold capitalize border ${getCategoryColor(project.category)}`}>
+              <div className="absolute top-6 left-6 flex items-center space-x-3 ">
+                <span className={`px-3 py-1 rounded-full text-sm font-semibold capitalize border bg-white text-black ${getCategoryColor(project.category)}`}>
                   {project.category}
                 </span>
                 {project.verified && (

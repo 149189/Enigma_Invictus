@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Heart, Menu, X, User as UserIcon } from 'lucide-react';
 
-const Header = ({ user }) => {
+const Header = ({ user, isLoading }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const pathname = usePathname();
 
@@ -65,22 +65,26 @@ const Header = ({ user }) => {
 
           {/* User Profile */}
           <div className="hidden md:flex items-center space-x-4">
-            {user ? (
-              <div className="flex items-center space-x-3 bg-emerald-50 rounded-full p-2 pr-4 hover:bg-emerald-100 transition-colors duration-200">
-                <img 
-                  src={user.avatar} 
-                  alt={user.name}
-                  className="w-8 h-8 rounded-full object-cover"
-                />
-                <span className="text-sm font-medium text-emerald-800">{user.name}</span>
-              </div>
-            ) : (
-              <button className="flex items-center space-x-2 bg-emerald-600 text-white px-4 py-2 rounded-full hover:bg-emerald-700 transition-all duration-200 hover:scale-105">
-                <UserIcon className="w-4 h-4" />
-                <span>Sign In</span>
-              </button>
-            )}
-          </div>
+    {isLoading ? (
+      <div className="animate-pulse bg-gray-200 rounded-full p-2 pr-4">
+        <div className="w-8 h-8 rounded-full bg-gray-300"></div>
+      </div>
+    ) : user ? (
+      <div className="flex items-center space-x-3 bg-emerald-50 rounded-full p-2 pr-4 hover:bg-emerald-100 transition-colors duration-200">
+        <img 
+          src={user.avatar} 
+          alt={user.name}
+          className="w-8 h-8 rounded-full object-cover"
+        />
+        <span className="text-sm font-medium text-emerald-800">{user.name}</span>
+      </div>
+    ) : (
+      <Link href="/login" className="flex items-center space-x-2 bg-emerald-600 text-white px-4 py-2 rounded-full hover:bg-emerald-700 transition-all duration-200 hover:scale-105">
+        <UserIcon className="w-4 h-4" />
+        <span>Sign In</span>
+      </Link>
+    )}
+  </div>
 
           {/* Mobile Menu Button */}
           <button 
