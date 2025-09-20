@@ -1,15 +1,11 @@
 // app/dashboard/page.js
 "use client";
 
-import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
-import { getCurrentAdmin, adminLogout } from "@/services/admin/adminServices";
 import { 
   BarChart3, 
   Users, 
   DollarSign, 
   FileText, 
-  LogOut,
   CheckCircle,
   XCircle,
   Clock,
@@ -17,60 +13,15 @@ import {
   Shield
 } from "lucide-react";
 
-export default function Dashboard() {
-  const [admin, setAdmin] = useState(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [stats, setStats] = useState({
-    totalProjects: 0,
-    pendingProjects: 0,
-    totalDonations: 0,
-    totalUsers: 0
-  });
-  const router = useRouter();
+export default function DummyDashboard() {
+  const admin = { name: "Admin User" };
 
-  useEffect(() => {
-    const checkAuth = async () => {
-      try {
-        const response = await getCurrentAdmin(router);
-        if (response?.data) {
-          setAdmin(response.data.data);
-          // In a real app, you would fetch stats from your API
-          setStats({
-            totalProjects: 142,
-            pendingProjects: 23,
-            totalDonations: 125430,
-            totalUsers: 567
-          });
-        } else {
-          router.push("/");
-        }
-      } catch (error) {
-        console.error("Auth check failed:", error);
-        router.push("/");
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    checkAuth();
-  }, [router]);
-
-  const handleLogout = async () => {
-    const res = await adminLogout(router);
-    if (res?.data?.success) {
-      router.push("/");
-    } else {
-      alert("Logout failed, try again");
-    }
+  const stats = {
+    totalProjects: 142,
+    pendingProjects: 23,
+    totalDonations: 125430,
+    totalUsers: 567
   };
-
-  if (isLoading) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="w-12 h-12 border-t-2 border-blue-500 border-solid rounded-full animate-spin"></div>
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -81,16 +32,7 @@ export default function Dashboard() {
             <Shield className="text-blue-600 mr-2" size={24} />
             <h1 className="text-xl font-semibold text-gray-900">Admin Dashboard</h1>
           </div>
-          <div className="flex items-center space-x-4">
-            <span className="text-sm text-gray-700">Welcome, {admin?.name}</span>
-            <button
-              onClick={handleLogout}
-              className="flex items-center text-sm bg-red-100 text-red-700 py-1 px-3 rounded-md hover:bg-red-200 transition-colors"
-            >
-              <LogOut size={16} className="mr-1" />
-              Logout
-            </button>
-          </div>
+          <span className="text-sm text-gray-700">Welcome, {admin.name}</span>
         </div>
       </header>
 
