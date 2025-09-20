@@ -28,7 +28,14 @@ export default function ProfilePage() {
     const checkAuth = async () => {
       const response = await getCurrentUser(router);
       if (response?.data) {
-        setUser(response.data.data);
+        const currentUser = {
+          name: response.data.data.name,
+          avatar: response.data.data.avatar,
+          token: response.data.accessToken
+        };
+        setUser(currentUser);
+        localStorage.setItem("user", JSON.stringify(currentUser));
+        console.log("user is:- ", currentUser);
       } else {
         router.push("/login");
       }

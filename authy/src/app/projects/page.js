@@ -1,21 +1,25 @@
 'use client';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Search, SlidersHorizontal } from 'lucide-react';
 import ProjectCard from '../../components/ProjectCard';
-import { mockProjects } from '../../data/mockData';
+import axios from 'axios';
+
 const ProjectsPage = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [sortBy, setSortBy] = useState('recent');
   const [showFilters, setShowFilters] = useState(false);
+  const [projects, setProjects] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   const categories = [
     { value: 'all', label: 'All Categories' },
-    { value: 'education', label: 'Education' },
-    { value: 'environment', label: 'Environment' },
-    { value: 'community', label: 'Community' },
-    { value: 'health', label: 'Health' },
-    { value: 'emergency', label: 'Emergency' }
+    { value: 'Education', label: 'Education' },
+    { value: 'Environment', label: 'Environment' },
+    { value: 'Community', label: 'Community' },
+    { value: 'Health', label: 'Health' },
+    { value: 'Other', label: 'Other' }
   ];
 
   const sortOptions = [
@@ -25,7 +29,34 @@ const ProjectsPage = () => {
     { value: 'funded', label: 'Most Funded' }
   ];
 
-  const filteredProjects = mockProjects
+  // Fetch projects from API
+  useEffect(() => {
+    const fetchProjects = async () => {
+      try {
+        setLoading(true);
+        const response = await axios.get('http://localhost:8000/api/projects/get_all');
+        
+        if (response.data.success) {
+          // Only show approved projects to users
+          const approvedProjects = response.data.projects.filter(
+            project => project.status === 'approved'
+          );
+          setProjects(approvedProjects);
+        } else {
+          setError('Failed to fetch projects');
+        }
+      } catch (err) {
+        console.error('Error fetching projects:', err);
+        setError('Failed to load projects. Please try again later.');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProjects();
+  }, []);
+
+  const filteredProjects = projects
     .filter(project => {
       const matchesSearch =
         project.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -36,15 +67,50 @@ const ProjectsPage = () => {
     .sort((a, b) => {
       switch (sortBy) {
         case 'popular':
-          return b.donorCount - a.donorCount;
+          // For popularity, we might use raised amount as a proxy
+          return b.raisedAmount - a.raisedAmount;
         case 'ending':
-          return a.daysLeft - b.daysLeft;
+          // Since we don't have an end date, we'll use creation date as a fallback
+          return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
         case 'funded':
-          return b.raisedAmount / b.goalAmount - a.raisedAmount / a.goalAmount;
+          return (b.raisedAmount / b.goalAmount) - (a.raisedAmount / a.goalAmount);
         default:
           return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
       }
     });
+
+  if (loading) {
+    return (
+      <div className="min-h-screen pt-8 pb-16 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Loading projects...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen pt-8 pb-16 flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-24 h-24 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-6">
+            <svg className="w-12 h-12 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+            </svg>
+          </div>
+          <h3 className="text-2xl font-semibold text-gray-900 mb-2">Error Loading Projects</h3>
+          <p className="text-gray-600 mb-6">{error}</p>
+          <button
+            onClick={() => window.location.reload()}
+            className="bg-emerald-600 text-white px-6 py-3 rounded-xl hover:bg-emerald-700 transition-colors duration-200"
+          >
+            Try Again
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen pt-8 pb-16">
@@ -124,11 +190,28 @@ const ProjectsPage = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {filteredProjects.map((project, index) => (
               <div
-                key={project.id}
+                key={project._id}
                 className="animate-fadeInUp"
                 style={{ animationDelay: `${index * 100}ms` }}
               >
-                <ProjectCard project={project} />
+                <ProjectCard 
+                  project={{
+                    id: project._id,
+                    title: project.title,
+                    description: project.description,
+                    category: project.category,
+                    goalAmount: project.goalAmount,
+                    raisedAmount: project.raisedAmount,
+                    // For donorCount and daysLeft, we'll need to add these to your API or calculate them
+                    donorCount: 0, // You might want to add this field to your API
+                    daysLeft: 30, // You might want to add an end date to your project schema
+                    createdAt: project.createdAt,
+                    image: project.images && project.images.length > 0 
+                      ? project.images[0] 
+                      : 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=600',
+                    creator: project.creator
+                  }}
+                />
               </div>
             ))}
           </div>
