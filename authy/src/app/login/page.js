@@ -26,11 +26,11 @@ export default function Home() {
     const checkAuth = async () => {
       const response = await getCurrentUser(router);
       if (response?.data) {
-        router.push("/");
+        router.push("/welcome");
       }
     };
-   
-  });
+  
+  } );
 
   const handleChange = (e) => {
     setFormData((prev) => ({ ...prev, [e.target.name]: e.target.value }));
