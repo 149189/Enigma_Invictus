@@ -7,7 +7,7 @@ import { mockProjects } from '../data/mockData'; // Import mock data directly
 const LandingPage = () => {
   // Use mockProjects directly and add optional chaining
   const featuredProjects = mockProjects?.filter(project => project.featured).slice(0, 3) || [];
-
+  
   return (
     <div className="min-h-screen">
       {/* Hero Section */}

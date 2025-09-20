@@ -132,7 +132,7 @@ const PaymentPage = () => {
                       onChange={(e) => setAmount(e.target.value)}
                       min="1"
                       required
-                      className="flex-1 px-3 py-3 border border-gray-300 rounded-r-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                      className="flex-1 px-3 py-3 border border-gray-300 rounded-r-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-black"
                       placeholder="Enter custom amount"
                     />
                   </div>
@@ -145,9 +145,9 @@ const PaymentPage = () => {
                   </label>
                   <div className="space-y-3">
                     {[
-                      { id: 'card', label: 'Credit/Debit Card', icon: CreditCard },
+                      { id: 'card', label: 'Blockchain', icon: CreditCard },
                       { id: 'upi', label: 'UPI', icon: Smartphone },
-                      { id: 'netbanking', label: 'Net Banking', icon: Building2 }
+                    //   { id: 'netbanking', label: 'Net Banking', icon: Building2 }
                     ].map(method => (
                       <label
                         key={method.id}
@@ -159,7 +159,7 @@ const PaymentPage = () => {
                           value={method.id}
                           checked={paymentMethod === method.id}
                           onChange={(e) => setPaymentMethod(e.target.value)}
-                          className="text-emerald-600"
+                          className="text-black"
                         />
                         <method.icon className="w-5 h-5 text-gray-600" />
                         <span className="font-medium text-gray-900">{method.label}</span>
@@ -181,7 +181,7 @@ const PaymentPage = () => {
                       onChange={(e) => setDonorInfo(prev => ({ ...prev, name: e.target.value }))}
                       required={!donorInfo.anonymous}
                       disabled={donorInfo.anonymous}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 disabled:bg-gray-100"
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 disabled:bg-gray-400 text-black"
                     />
                     <input
                       type="email"
@@ -189,14 +189,14 @@ const PaymentPage = () => {
                       value={donorInfo.email}
                       onChange={(e) => setDonorInfo(prev => ({ ...prev, email: e.target.value }))}
                       required
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-black"
                     />
                     <textarea
                       placeholder="Leave a message (optional)"
                       value={donorInfo.message}
                       onChange={(e) => setDonorInfo(prev => ({ ...prev, message: e.target.value }))}
                       rows="3"
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-black"
                     />
                     <label className="flex items-center space-x-2">
                       <input

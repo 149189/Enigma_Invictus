@@ -13,8 +13,15 @@ export default function Welcome() {
   useEffect(() => {
     const checkAuth = async () => {
       const response = await getCurrentUser(router);
+      console.log(response.data);
       if (response?.data) {
-        setUser({ name: response.data.data.name, avatar: response.data.data.avatar });
+        const currentUser = {
+          name: response.data.data.name,
+          avatar: response.data.data.avatar
+        };
+        setUser(currentUser);
+        localStorage.setItem("user", JSON.stringify(currentUser));
+        console.log("user is:- ", currentUser);
       } else {
         router.push("/"); // not logged in → redirect
       }

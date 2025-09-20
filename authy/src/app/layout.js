@@ -1,7 +1,7 @@
 import { Geist, Geist_Mono } from "next/font/google"; 
 import './globals.css';
 import GoogleAuthProvider from '../components/GoogleAuthProvider.js';
-import HeaderWrapper from '../components/HeaderWrapper/HeaderWrapper'; // import the client wrapper
+import HeaderWrapper from '../components//HeaderWrapper/HeaderWrapper'; // import the client wrapper
 
 const geistSans = Geist({
   variable: '--font-geist-sans',
